@@ -1,0 +1,116 @@
+<p class="muted" id="nextInfo">Далее: пока не определено</p>
+    </section>
+  </main>
+
+  <footer>
+    DISNEY GLOBAL · PROTOTYPE 0.1 · Время Астаны/Алматы (UTC+5)
+  </footer>
+
+  <script>
+    const clock = document.getElementById("clock");
+    const bumper = document.getElementById("bumper");
+    const video = document.getElementById("video");
+    const current = document.getElementById("current");
+    const status = document.getElementById("status");
+    const nextInfo = document.getElementById("nextInfo");
+    const series = document.getElementById("series");
+    const startButton = document.getElementById("start");
+    const nextButton = document.getElementById("next");
+
+    // Добавим реальные ссылки на разрешённые видео позже.
+    const playlist = [
+      { name: "Metal Cardbot", episode: "Тестовый выпуск", url: "" },
+      { name: "Disney — демо", episode: "Демонстрационный блок", url: "" },
+      { name: "SAMG — демо", episode: "Демонстрационный блок", url: "" }
+    ];
+
+    let index = 0;
+    let running = false;
+    let bumperTimer = null;
+
+    function updateClock() {
+      clock.textContent = new Intl.DateTimeFormat("ru-KZ", {
+        timeZone: "Asia/Almaty",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }).format(new Date());
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    function playBumper(callback) {
+      clearTimeout(bumperTimer);
+      video.pause();
+      video.style.display = "none";
+      bumper.classList.remove("show");
+
+      // Перезапускаем CSS-анимацию.
+      void bumper.offsetWidth;
+      bumper.classList.add("show");
+
+      bumperTimer = setTimeout(() => {
+        bumper.classList.remove("show");
+        callback();
+      }, 4000);
+    }
+
+    function showProgram() {
+      const chosen = series.value;
+      current.textContent = chosen;
+      nextInfo.textContent =
+        "Далее: " + playlist[(index + 1) % playlist.length].name;
+
+      const item = playlist[index];
+      item.name = chosen;
+
+      if (item.url) {
+        video.src = item.url;
+        video.style.display = "block";
+        video.play().then(() => {
+          status.textContent = "Видео воспроизводится.";
+        }).catch(() => {
+          status.textContent =
+            "Нажми Play в видеоплеере, чтобы начать видео.";
+        });
+      } else {
+        video.removeAttribute("src");
+        video.load();
+        video.style.display = "none";
+        status.textContent =
+          "Демо-режим: добавь ссылку на разрешённое видео, чтобы проверить воспроизведение.";
+      }
+
+      nextButton.disabled = false;
+    }
+
+    function startChannel() {
+      if (running) return;
+      running = true;
+      startButton.disabled = true;
+      status.textContent = "Заставка Disney Global запускается…";
+
+      playBumper(showProgram);
+    }
+
+    function nextProgram() {
+      if (!running) return;
+
+      index = (index + 1) % playlist.length;
+      series.value = playlist[index].name;
+      status.textContent = "Переход к следующей программе…";
+
+      playBumper(showProgram);
+    }
+
+    startButton.addEventListener("click", startChannel);
+    nextButton.addEventListener("click", nextProgram);
+
+    video.addEventListener("ended", nextProgram);
+  </script>
+</body>
+</html>
